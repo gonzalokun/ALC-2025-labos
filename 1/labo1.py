@@ -17,13 +17,13 @@ def matricesIguales(A, B):
 
     for i in range(A.shape[0]):
         for j in range(A.shape[1]):
-            if not sonIguales(A[i,j], B[i,j]):
+            if np.abs(A[i][j] - B[i][j]) >= 1e-08: # if not sonIguales(A[i,j], B[i,j]):
                 return False
 
     return True
 
-def sonIguales(x,y,atol=1e-08):
-    return np.allclose(error(x,y),0,atol=atol)
+def sonIguales(x, y, atol=1e-08):
+    return np.allclose(error(x,y),0, atol=atol)
 
 assert(not sonIguales(1,1.1))
 assert(sonIguales(1,1 + np.finfo('float64').eps))
