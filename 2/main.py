@@ -110,13 +110,13 @@ def trans_afin(v,theta,s,b):
     return res
 
 def main():
-    #print('Ejecutar el programa')
+    print('Ejecutar el programa')
     # generar el tipo de transformacion dando valores a la matriz T
-    #T = pd.read_csv('T.csv', header=None).values
-    #corners = np.array([[0,0],[100,100]])
+    T = pd.read_csv('T.csv', header=None).values
+    corners = np.array([[0,0],[100,100]])
     # corners = np.array([[-100,-100],[100,100]]) array con valores positivos y negativos
-    #wz = pointsGrid(corners)
-    #vistform(T, wz, 'Deformar coordenadas')
+    wz = pointsGrid(corners)
+    vistform(T, wz, 'Deformar coordenadas')
 
     # Tests para rota
     assert(np.allclose(rota(0), np.eye(2)))
