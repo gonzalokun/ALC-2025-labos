@@ -40,7 +40,8 @@ def vistform(T, wz, titulo=''):
     fig, (ax1, ax2) = plt.subplots(1, 2)         
     fig.suptitle(titulo)
     grid_plot(ax1, wz, limits, 'w', 'z')    
-    grid_plot(ax2, xy, limits, 'x', 'y')    
+    grid_plot(ax2, xy, limits, 'x', 'y')
+    plt.show()
     
 def grid_plot(ax, ab, limits, a_label, b_label):
     ax.plot(ab[0,:], ab[1,:], '.')
@@ -103,7 +104,7 @@ def trans_afin(v,theta,s,b):
     """
     transf = afin(theta,s,b)
 
-    vectorCon1 =  np.append(v, 1) 
+    vectorCon1 =  np.append(v, 1)
     vectorColumna = vectorCon1.T
     vectorColumnaRes = transf@vectorColumna
     res = vectorColumnaRes.T[:2]
@@ -112,9 +113,18 @@ def trans_afin(v,theta,s,b):
 def main():
     print('Ejecutar el programa')
     # generar el tipo de transformacion dando valores a la matriz T
-    T = pd.read_csv('T.csv', header=None).values
+    #T = pd.read_csv('T.csv', header=None).values
+    T1 = np.array([[2,0],[0,3]])
+    T1inv = np.array([[1/2,0],[0,1/3]])
+    angulo = np.pi/4
+    T2 = np.array([[np.cos(angulo), -np.sin(angulo)],[np.sin(angulo), np.cos(angulo)]])
+    T3 = np.array([[np.cos(-angulo), -np.sin(-angulo)],[np.sin(-angulo), np.cos(-angulo)]])
+    T4 = np.array([[1,0],[0,1]])
+
     corners = np.array([[0,0],[100,100]])
     # corners = np.array([[-100,-100],[100,100]]) array con valores positivos y negativos
+    radio = 1
+    tremendo = np.array([[radio*np.cos(x) for x in range(1, 360)], [radio*np.sin(y) for y in range(1, 360)]])
     wz = pointsGrid(corners)
     vistform(T, wz, 'Deformar coordenadas')
 
@@ -178,8 +188,6 @@ def main():
         np.array([4,8])
     ))
 
-        
-    
-    
+
 if __name__ == "__main__":
     main()
