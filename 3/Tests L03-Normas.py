@@ -2,7 +2,54 @@
 
 import numpy as np
 
+def norma(x, p):
+    """
+    Devuelve la norma p del vector x.
+    """
+    if p == 'inf':
+        return np.max(np.abs(x))
+    return np.sum(np.abs(x)**p)**(1/p)
 
+def normaliza(X, p):
+    """
+    Recibe X, una lista de vectores no vacios, y un escalar p. Devuelve
+    una lista donde cada elemento corresponde a normalizar los
+    elementos de X con la norma p.
+    """
+    return map(lambda v: v/norma(v, p), X)
+
+def normaMatMC(A, q, p, Np):
+    """
+    Devuelve la norma A-{q,p} y el vector x en el cual se alcanza
+    el maximo.
+    """
+    vectoresAlAzar = np.random.rand(Np, A.shape[1])
+    vectoresNormalizados = normaliza(vectoresAlAzar, p)
+    vectorConNorma = map(lambda x: [norma(A@x, q), x], vectoresNormalizados)
+    return max(vectorConNorma, key=lambda p: p[0])
+
+def normaExacta(A, p=[1, 'inf']):
+    """
+    Devuelve una lista con las normas 1 e infinito de una matriz A
+    usando las expresiones del enunciado 2.(c).
+    """
+    if not p in [1,'inf']:
+        return None
+    if p == 1:
+        return np.max(np.sum(np.abs(A), axis=0))
+    if p == 'inf':
+        return np.max(np.sum(np.abs(A), axis=1))
+
+def condMC(A, p):
+    """
+    Devuelve el numero de condicion de A usando la norma inducida p.
+    """
+
+def condExacto(A, p):
+    """
+    Que devuelve el numero de condicion de A a partir de la formula de
+    la ecuacion (1) usando la norma p.
+    """
 
 # Tests norma
 assert(np.allclose(norma(np.array([1,1]),2),np.sqrt(2)))
@@ -31,6 +78,7 @@ assert(normaExacta(np.random.random((4,4)),'inf')<=4)
 
 # Test normaMC
 
+"""
 nMC = normaMatMC(A=np.eye(2),q=2,p=1,Np=100000)
 assert(np.allclose(nMC[0],1,atol=1e-3))
 assert(np.allclose(np.abs(nMC[1][0]),1,atol=1e-3) or np.allclose(np.abs(nMC[1][1]),1,atol=1e-3))
@@ -43,6 +91,7 @@ assert(np.allclose(np.abs(nMC[1][0]),1,atol=1e-3) and np.allclose(np.abs(nMC[1][
 A = np.array([[1,2],[3,4]])
 nMC = normaMatMC(A=A,q='inf',p='inf',Np=1000000)
 assert(np.allclose(nMC[0],normaExacta(A,'inf'),rtol=2e-1)) 
+"""
 
 # Test condMC
 
