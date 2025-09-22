@@ -1,5 +1,9 @@
 # Tests L03-Normas
 
+import numpy as np
+
+
+
 # Tests norma
 assert(np.allclose(norma(np.array([1,1]),2),np.sqrt(2)))
 assert(np.allclose(norma(np.array([1]*10),2),np.sqrt(10)))
