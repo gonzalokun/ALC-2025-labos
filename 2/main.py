@@ -126,7 +126,7 @@ def main():
     radio = 1
     tremendo = np.array([[radio*np.cos(x) for x in range(1, 360)], [radio*np.sin(y) for y in range(1, 360)]])
     wz = pointsGrid(corners)
-    vistform(T, wz, 'Deformar coordenadas')
+    vistform(T1, wz, 'Deformar coordenadas')
 
     # Tests para rota
     assert(np.allclose(rota(0), np.eye(2)))
@@ -184,10 +184,8 @@ def main():
 
     assert(np.allclose(
         trans_afin(np.array([1,0]), np.pi/2,[3,2],[4,5]),
-        #np.array([4,7])  #EL TEST ESTA MAL HECHO DEBERIA DAR [4,8]
         np.array([4,8])
     ))
-
 
 if __name__ == "__main__":
     main()
