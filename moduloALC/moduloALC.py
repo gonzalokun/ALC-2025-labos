@@ -318,7 +318,7 @@ def normaMatMC(A, q, p, Np):
     vectoresAlAzar = np.random.rand(Np, A.shape[1])
     vectoresNormalizados = normaliza(vectoresAlAzar, p)
 
-    vectorConNorma = [0 for _ in range(len(vectoresNormalizados))] #map(lambda x: [norma(A@x, q), x], vectoresNormalizados)
+    vectorConNorma = [0 for _ in range(len(vectoresNormalizados))]
     for i in range(len(vectoresNormalizados)):
         vectorConNorma[i] = [norma(calcularAx(A, vectoresNormalizados[i]), q), vectoresNormalizados[i]]
 
@@ -338,20 +338,37 @@ def normaExacta(A, p=[1, 'inf']):
     if not p in [1,'inf']:
         return None
     if p == 1:
-        return np.max(np.sum(np.abs(A), axis=0))
-    if p == 'inf':
-        return np.max(np.sum(np.abs(A), axis=1))
+        vectorSumas = []
+        for j in range(A.shape[1]):
+            sum = 0
+            for i in range(A.shape[0]):
+                sum += abs(A[i][j])
+            vectorSumas.append(sum)
+        return np.max(vectorSumas)
 
-def condMC(A, p):
+    if p == 'inf':
+        vectorSumas = []
+        for i in range(A.shape[0]):
+            sum = 0
+            for j in range(A.shape[1]):
+                sum += abs(A[i][j])
+            vectorSumas.append(sum)
+        return np.max(vectorSumas)
+
+def condMC(A, p, cantVect):
     """
     Devuelve el numero de condicion de A usando la norma inducida p.
     """
+    inversa = np.linalg.inv(A)
+    return normaMatMC(A, p, p, cantVect)[0] * normaMatMC(inversa, p, p, cantVect)[0]
 
-def condExacto(A, p):
+def condExacta(A, p):
     """
     Que devuelve el numero de condicion de A a partir de la formula de
     la ecuacion (1) usando la norma p.
     """
+    inversa = np.linalg.inv(A)
+    return normaExacta(A, p) * normaExacta(inversa, p)
 
 # Tests para los labos
 
@@ -362,7 +379,8 @@ def sonIguales(x, y, atol=1e-08):
 def correrTestsLabos():
     #test_labo1()
     #test_labo2()
-    test_labo3()
+    #test_labo3()
+    test_labo4()
 
 def test_labo1():
     assert(not sonIguales(1,1.1))
@@ -467,7 +485,6 @@ def test_labo3():
 
     # Test normaMC
 
-    """
     nMC = normaMatMC(A=np.eye(2),q=2,p=1,Np=100000)
     assert(np.allclose(nMC[0],1,atol=1e-3))
     assert(np.allclose(np.abs(nMC[1][0]),1,atol=1e-3) or np.allclose(np.abs(nMC[1][1]),1,atol=1e-3))
@@ -480,7 +497,6 @@ def test_labo3():
     A = np.array([[1,2],[3,4]])
     nMC = normaMatMC(A=A,q='inf',p='inf',Np=1000000)
     assert(np.allclose(nMC[0],normaExacta(A,'inf'),rtol=2e-1)) 
-    """
 
     # Test condMC
 
@@ -489,6 +505,11 @@ def test_labo3():
     normaA = normaMatMC(A, 2, 2, 10000)
     normaA_ = normaMatMC(A_, 2, 2, 10000)
     condA = condMC(A, 2, 10000)
+    print("ANTES DE ASSERT condMC 1: ")
+    print("normaA: ", normaA)
+    print("normaA_: ", normaA_)
+    print("mult normas: ", normaA[0] * normaA_[0])
+    print("condA: ", condA)
     assert (np.allclose(normaA[0] * normaA_[0], condA, atol=1e-3))
 
     A = np.array([[3, 2], [4, 1]])
@@ -513,5 +534,8 @@ def test_labo3():
     normaA_ = normaExacta(A_, 'inf')
     condA = condExacta(A, 'inf')
     assert (np.allclose(normaA * normaA_, condA))
+
+def test_labo4():
+    pass
 
 correrTestsLabos()
