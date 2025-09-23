@@ -1,3 +1,4 @@
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -55,8 +56,8 @@ def rota(theta):
     que rota un vector dado en un angulo theta
     """
     res =np.array([
-        [np.cos(theta), -np.sin(theta)],
-        [np.sin(theta),  np.cos(theta)]
+        [math.cos(theta), -math.sin(theta)],
+        [math.sin(theta),  math.cos(theta)]
     ])
     return res
 
@@ -67,7 +68,7 @@ def escala(s):
     La matriz escala la componente i de un vector de Rn
     en un factor s[i]
     """
-    res =np.diag(s)
+    res = np.diag(s)
     return res
 
 def rota_y_escala(theta,s):
@@ -126,7 +127,7 @@ def main():
     radio = 1
     tremendo = np.array([[radio*np.cos(x) for x in range(1, 360)], [radio*np.sin(y) for y in range(1, 360)]])
     wz = pointsGrid(corners)
-    vistform(T1, wz, 'Deformar coordenadas')
+    # vistform(T1, wz, 'Deformar coordenadas')
 
     # Tests para rota
     assert(np.allclose(rota(0), np.eye(2)))

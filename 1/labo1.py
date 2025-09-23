@@ -2,10 +2,10 @@
 import numpy as np
 
 def error(x, y):
-    return np.abs(np.float64(x) -np.float64(y))
+    return abs(x - y)
 
 def error_relativo(x, y):
-    return np.abs(np.float64(x) - np.float64(y)) / np.abs(np.float64(x))
+    return abs(x - y) / abs(x)
 
 def matricesIguales(A, B):
     """
@@ -17,7 +17,7 @@ def matricesIguales(A, B):
 
     for i in range(A.shape[0]):
         for j in range(A.shape[1]):
-            if np.abs(A[i][j] - B[i][j]) >= 1e-08: # if not sonIguales(A[i,j], B[i,j]):
+            if abs(A[i][j] - B[i][j]) >= 1e-08:
                 return False
 
     return True
