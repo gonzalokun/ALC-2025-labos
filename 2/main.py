@@ -126,8 +126,8 @@ def main():
     # corners = np.array([[-100,-100],[100,100]]) array con valores positivos y negativos
     radio = 1
     tremendo = np.array([[radio*np.cos(x) for x in range(1, 360)], [radio*np.sin(y) for y in range(1, 360)]])
-    wz = pointsGrid(corners)
-    # vistform(T1, wz, 'Deformar coordenadas')
+    wz = tremendo #pointsGrid(corners)
+    vistform(T1, wz, 'Deformar coordenadas')
 
     # Tests para rota
     assert(np.allclose(rota(0), np.eye(2)))

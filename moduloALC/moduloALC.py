@@ -1,13 +1,16 @@
 import numpy as np
 import math
 
+from soupsieve.util import lower
+
+
 # labo 0
 
 def esCuadrada(a):
     return a.ndim == 2 and a.shape[0] == a.shape[1]
 
 def matrizDeCeros(filas, columnas):
-    return [[0 for _ in range(columnas)] for _ in range(filas)]
+    return [[0.0 for _ in range(columnas)] for _ in range(filas)]
 
 def triangSup(a):
     if not esCuadrada(a):
@@ -373,7 +376,29 @@ def condExacta(A, p):
 # labo 4
 
 def calculaLU(A):
-    pass
+    nops = 0
+    upper = matrizDeCeros(A.shape[0], A.shape[1]) + A
+    lower = escala([1 for _ in range(A.shape[0])])
+
+    for fila in range(upper.shape[0]):
+        numDiagonal = upper[fila][fila]
+
+        if numDiagonal < 1e-08:
+            return [None, None, 0]
+
+        for fila2 in range(fila+1, upper.shape[0]):
+            nops += 1
+
+            coef = upper[fila2][fila]/numDiagonal
+            lower[fila2][fila] = coef
+
+            upper[fila2][fila] = 0.0
+
+            for columna in range(fila+1, upper.shape[1]):
+                upper[fila2][columna] = upper[fila2][columna] - coef*upper[fila][columna]
+                nops += 2
+
+    return [lower, upper, nops]
 
 def res_tri(L, b, inferior=True):
     pass
@@ -384,7 +409,7 @@ def inversa(A):
 def calculaLDV(A):
     pass
 
-def esSDP(A,atol=1e-08):
+def esSDP(A, atol=1e-08):
     pass
 
 # Tests para los labos
