@@ -7,21 +7,38 @@ import numpy as np
 
 def elim_gaussiana(A):
     cant_op = 0
-    m=A.shape[0]
-    n=A.shape[1]
+    filas=A.shape[0]
+    columnas=A.shape[1]
     Ac = A.copy()
     
-    if m!=n:
+    if filas!=columnas:
         print('Matriz no cuadrada')
         return
     
     ## desde aqui -- CODIGO A COMPLETAR
+    cant_op = 0
+    for i_diagonal in range(filas):
+        for i_fila in range(i_diagonal+1, filas):
 
+            coeficiente = Ac[i_fila][i_diagonal] / Ac[i_diagonal][i_diagonal]
+            cant_op += 1
+            Ac[i_fila][i_diagonal] = coeficiente
 
+            for i_columna_Suma in  range(i_diagonal+1, columnas ): 
+                Ac[i_fila][i_columna_Suma] = Ac[i_fila][i_columna_Suma] - (coeficiente*Ac[i_diagonal][i_columna_Suma])
+                cant_op += 2
 
+    L = np.zeros((filas,columnas))
+    U = Ac 
 
+    for i_fila_l in range(filas):
+        for i_columna_l in range(0,i_fila_l+1):
 
-                
+            if(i_fila_l == i_columna_l):
+                L[i_fila_l][i_columna_l] = 1
+            else:
+                L[i_fila_l][i_columna_l] = Ac[i_fila_l][i_columna_l]
+                U[i_fila_l][i_columna_l] = 0
     ## hasta aqui, calculando L, U y la cantidad de operaciones sobre 
     ## la matriz Ac
             
