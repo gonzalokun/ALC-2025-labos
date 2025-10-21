@@ -1,3 +1,5 @@
+from fcntl import FASYNC
+
 import numpy as np
 import math
 
@@ -401,7 +403,7 @@ def calculaLU(A):
     return [lower, upper, nops]
 
 
-def res_tri(L,b, inferior=True):
+def res_tri(L, b, inferior=True):
 
     n = L.shape[1]
     x_vector =  np.zeros(n)
@@ -424,27 +426,61 @@ def res_tri(L,b, inferior=True):
 
     return x_vector
 
+def inversa(A):
 
-def inversa(A): #TODO ARREGLAR
     descomposicion = calculaLU(A)
     L = descomposicion[0]
     U = descomposicion[1]
+
+    if L is None or U is None:
+        return None
+
     filas, columnas = A.shape
     inversa = np.zeros((filas, columnas))
     for columna in range(columnas):
         vector_canonico = np.zeros(filas)
         vector_canonico[columna] = 1.
-        y = res_tri(L,vector_canonico)
-        inversa[columna] = res_tri(U,y,False)
+        y = res_tri(L, vector_canonico)
+        inversa[columna] = res_tri(U, y, False)
     return traspuesta(inversa)
-    
 
 def calculaLDV(A):
+    nops = 0
+    descomposicion = calculaLU(A)
+    L = descomposicion[0]
+    U = descomposicion[1]
+    nops += descomposicion[2]
 
-    pass
+    if L is None or U is None:
+        return [None, None, None, 0]
+
+    U_t = traspuesta(U)
+    descomposicionU_t = calculaLU(U_t)
+
+    V_t = descomposicionU_t[0]
+    D = descomposicionU_t[1]
+    nops += descomposicionU_t[2]
+
+    V = traspuesta(V_t)
+
+    return [L, D, V, nops]
 
 def esSDP(A, atol=1e-08):
-    pass
+    if not esSimetrica(A):
+        return False
+
+    descLDV = calculaLDV(A)
+
+    if descLDV[0] is None:
+        return False
+
+    D = descLDV[1]
+
+    for i in range(D.shape[0]):
+        if D[i][i] <= 0:
+            return False
+
+    return True
 
 # Tests para los labos
 
