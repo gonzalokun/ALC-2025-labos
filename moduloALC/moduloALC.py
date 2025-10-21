@@ -425,7 +425,7 @@ def res_tri(L,b, inferior=True):
     return x_vector
 
 
-def inversa(A):
+def inversa(A): #TODO ARREGLAR
     descomposicion = calculaLU(A)
     L = descomposicion[0]
     U = descomposicion[1]
