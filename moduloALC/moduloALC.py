@@ -383,7 +383,7 @@ def calculaLU(A):
     for fila in range(upper.shape[0]):
         numDiagonal = upper[fila][fila]
 
-        if numDiagonal < 1e-08:
+        if np.abs(numDiagonal)  < 1e-08:
             return [None, None, 0]
 
         for fila2 in range(fila+1, upper.shape[0]):
@@ -400,13 +400,47 @@ def calculaLU(A):
 
     return [lower, upper, nops]
 
-def res_tri(L, b, inferior=True):
-    pass
+
+def res_tri(L,b, inferior=True):
+
+    n = L.shape[1]
+    x_vector =  np.zeros(n)
+    
+    if inferior:
+        for i in range(n):
+            x_actual = b[i]
+            #idea si es triangular inferior la solucion es de la pinta (b1/L11 , (b2-L21.X1)/L22 , b3-L32.X2-L31.X1   cada x_n se le restan todos los anteriores x_n
+            for j in range(i):
+                x_actual -= L[i][j]*x_vector[j]
+            x_actual = x_actual/L[i][i]
+            x_vector[i] = x_actual
+    else:
+        for i in range(n-1,-1,-1):
+            x_actual = b[i]
+            for j in range(i+1,n):
+                x_actual -= L[i][j]*x_vector[j]
+            x_actual = x_actual/L[i][i]
+            x_vector[i] = x_actual
+
+    return x_vector
+
 
 def inversa(A):
-    pass
+    descomposicion = calculaLU(A)
+    L = descomposicion[0]
+    U = descomposicion[1]
+    filas, columnas = A.shape
+    inversa = np.zeros((filas, columnas))
+    for columna in range(columnas):
+        vector_canonico = np.zeros(filas)
+        vector_canonico[columna] = 1.
+        y = res_tri(L,vector_canonico)
+        inversa[columna] = res_tri(U,y,False)
+    return traspuesta(inversa)
+    
 
 def calculaLDV(A):
+
     pass
 
 def esSDP(A, atol=1e-08):
