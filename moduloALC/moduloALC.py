@@ -482,17 +482,74 @@ def esSDP(A, atol=1e-08):
 
     return True
 
+def QR_con_GS(A, tol=1e-12, retorna_nops=False):
+    """
+    A una matriz de n x n
+    tol la tolerancia con la que se filtran elementos nulos en R
+    retorna_nops permite (opcionalmente) retornar el numero de operaciones realizado
+    retorna matrices Q y R calculadas con Gram Schmidt (y como tercer argumento opcional, el numero de operaciones).
+    Si la matriz A no es de n x n, debe retornar None
+    """
+    nops = 0 # TODO: IMPLEMENTAR
+    n = A.shape[0]
+
+    if n != A.shape[1]:
+        return None
+
+    Q = np.zeros(A.shape)
+    R = np.zeros(A.shape)
+
+    for j in range(0, n):
+        Q[:, j] = A[:, j]
+        for k in range(j):
+            R[k, j] = np.dot(Q[:, k], Q[:, j])
+            nops += n * 2 - 1 # n mult y n-1 sumas
+            Q[:, j] = Q[:, j] - vectorPorEscalar(Q[:, k], R[k, j])
+            nops += n * 2 # n mult y n restas
+
+        R[j, j] = norma(Q[:, j], 2)
+        nops += n * 2 # n mult y n-1 sumas y una raiz
+        Q[:, j] = vectorPorEscalar(Q[:, j], 1/R[j, j])
+        nops += n # n mult
+
+    if retorna_nops:
+        return [Q, R, nops]
+
+    return [Q, R]
+
+def QR_con_HH(A,tol=1e-12):
+    """
+    A una matriz de m x n (m>=n)
+    tol la tolerancia con la que se filtran elementos nulos en R
+    retorna matrices Q y R calculadas con reflexiones de Householder
+    Si la matriz A no cumple m>=n, debe retornar None
+    """
+def calculaQR(A,metodo='RH',tol=1e-12):
+    """
+    A una matriz de n x n
+    tol la tolerancia con la que se filtran elementos nulos en R
+    metodo = ['RH','GS'] usa reflectores de Householder (RH) o Gram Schmidt (GS) para realizar la factorizacion
+    retorna matrices Q y R calculadas con Gram Schmidt (y como tercer argumento opcional, el numero de operaciones)
+    Si el metodo no esta entre las opciones, retorna None
+    """
+
 # Tests para los labos
 
 # funciones extras para los tests
 def sonIguales(x, y, atol=1e-08):
     return np.allclose(error(x,y),0, atol=atol)
 
+def check_QR(Q,R,A,tol=1e-10):
+    # Comprueba ortogonalidad y reconstrucción
+    assert np.allclose(Q.T @ Q, np.eye(Q.shape[1]), atol=tol)
+    assert np.allclose(Q @ R, A, atol=tol)
+
 def correrTestsLabos():
     #test_labo1()
     #test_labo2()
     #test_labo3()
-    test_labo4()
+    #test_labo4()
+    test_labo5()
 
 def test_labo1():
     assert(not sonIguales(1,1.1))
@@ -750,5 +807,49 @@ def test_labo4():
     V0 = np.array([[1, 0, 0], [1, 1, 0], [1, 1 + 1e-10, 1]]).T
     A = L0 @ D0 @ V0
     assert (not esSDP(A))
+
+def test_labo5():
+    # --- Matrices de prueba ---
+    A2 = np.array([[1., 2.],
+                   [3., 4.]])
+
+    A3 = np.array([[1., 0., 1.],
+                   [0., 1., 1.],
+                   [1., 1., 0.]])
+
+    A4 = np.array([[2., 0., 1., 3.],
+                   [0., 1., 4., 1.],
+                   [1., 0., 2., 0.],
+                   [3., 1., 0., 2.]])
+
+    # --- TESTS PARA QR_by_GS2 ---
+    Q2, R2 = QR_con_GS(A2)
+    check_QR(Q2, R2, A2)
+
+    Q3, R3 = QR_con_GS(A3)
+    check_QR(Q3, R3, A3)
+
+    Q4, R4 = QR_con_GS(A4)
+    check_QR(Q4, R4, A4)
+
+    # --- TESTS PARA QR_by_HH ---
+    Q2h, R2h = QR_con_GS(A2)
+    check_QR(Q2h, R2h, A2)
+
+    Q3h, R3h = QR_con_HH(A3)
+    check_QR(Q3h, R3h, A3)
+
+    Q4h, R4h = QR_con_HH(A4)
+    check_QR(Q4h, R4h, A4)
+
+    # --- TESTS PARA calculaQR ---
+    Q2c, R2c = calculaQR(A2, metodo='RH')
+    check_QR(Q2c, R2c, A2)
+
+    Q3c, R3c = calculaQR(A3, metodo='GS')
+    check_QR(Q3c, R3c, A3)
+
+    Q4c, R4c = calculaQR(A4, metodo='RH')
+    check_QR(Q4c, R4c, A4)
 
 correrTestsLabos()
