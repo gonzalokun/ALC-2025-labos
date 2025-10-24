@@ -517,6 +517,20 @@ def QR_con_GS(A, tol=1e-12, retorna_nops=False):
 
     return [Q, R]
 
+def  concatenarMatricesEnDiagonal(a,b):
+    x1, y1 = a.shape
+    x2, y2 = b.shape
+    res = np.zeros((x1+x2, y1+y2))
+    for i in range(x1):
+        for j in range(y1):
+            res[i][j] = a[i][j]
+
+    for i in range(x1, x1+x2):
+        for j in range(y1,y1+y2):
+            res[i][j]= b[i][j]
+
+    return res
+
 def QR_con_HH(A,tol=1e-12):
     """
     A una matriz de m x n (m>=n)
@@ -524,7 +538,30 @@ def QR_con_HH(A,tol=1e-12):
     retorna matrices Q y R calculadas con reflexiones de Householder
     Si la matriz A no cumple m>=n, debe retornar None
     """
-def calculaQR(A,metodo='RH',tol=1e-12):
+    m = A.shape[0]
+    n = A.shape[1]
+    if m < n:
+        return None
+
+    R = A
+    Q = np.eye(m)
+
+    for k in range(n):
+        x = R[k:m, k]
+        alfa = (-1) * np.sign(x[0]) / norma(x, 2)
+        u = x - alfa * np.eye(m - k)[0]
+        norma_u = norma(u, 2)
+        if norma_u > tol:
+            u = u / norma_u
+            Hk = np.eye(m-k) - 2 * np.outer(u, u)
+            Hk_p = np.eye(m)
+            Hk_p[k:m, k:m] = Hk 
+            R = Hk_p @ R
+            Q = Q @ Hk_p
+
+    return [Q, R]
+
+def calculaQR(A, metodo='RH',tol=1e-12):
     """
     A una matriz de n x n
     tol la tolerancia con la que se filtran elementos nulos en R
