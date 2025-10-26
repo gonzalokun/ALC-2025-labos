@@ -190,6 +190,15 @@ def multiplicar(matrizA, matrizB):
 
     return np.array(res)
 
+def multiplacionMatricialDeVectores(vectorA, vectorB):
+    res = np.zeros((vectorA.shape[0], vectorB.shape[0]))
+
+    for i in range(vectorA.shape[0]):
+        for j in range(vectorB.shape[0]):
+            res[i][j] = vectorA[i]*vectorB[j]
+
+    return res
+
 def vectorPorEscalar(x, s):
     res = []
     for i in range(len(x)):
@@ -553,11 +562,11 @@ def QR_con_HH(A,tol=1e-12):
         norma_u = norma(u, 2)
         if norma_u > tol:
             u = u / norma_u
-            Hk = np.eye(m-k) - 2 * np.outer(u, u)
+            Hk = np.eye(m-k) - 2 * multiplacionMatricialDeVectores(u, u)
             Hk_p = np.eye(m)
             Hk_p[k:m, k:m] = Hk 
-            R = Hk_p @ R
-            Q = Q @ Hk_p
+            R = multiplicar(Hk_p, R)
+            Q = multiplicar(Q, Hk_p)
 
     return [Q, R]
 
