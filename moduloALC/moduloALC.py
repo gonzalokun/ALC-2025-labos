@@ -196,8 +196,16 @@ def multiplacionMatricialDeVectores(vectorA, vectorB):
     for i in range(vectorA.shape[0]):
         for j in range(vectorB.shape[0]):
             res[i][j] = vectorA[i]*vectorB[j]
-
     return res
+
+def productoEscalar(vectorA, vectorB):
+    if vectorA.shape[0] != vectorB.shape[0]:
+        return None
+    else:
+        res = 0.0
+        for i in range(vectorA.shape[0]):
+            res += vectorA[i]*vectorB[i]
+        return res
 
 def vectorPorEscalar(x, s):
     res = []
@@ -571,6 +579,82 @@ def calculaQR(A, metodo='RH',tol=1e-12):
     else:
         return None
 
+
+def escalarXMatriz(e, m):
+    res = m
+    filas, columnas = res.shape
+    for i in range(filas):
+        for j in range(columnas):
+            res[i][j] = e*res
+
+    return res
+
+
+
+def aplicarMatrizYNormalizar(A, v):
+    w = calcularAx(A, v)
+    wNorma = norma(w, 2)
+    if wNorma == 0:
+        return np.zeros(w.shape[0])
+    else:
+        w = vectorPorEscalar(w, 1/wNorma)
+    return w
+
+def aplicarMatrizKVecesYNormalizar(A, v, k):
+    w = v
+    for i in range(k):
+        w = aplicarMatrizYNormalizar(A, w)
+    return w
+
+
+
+
+def metpot2k(A, tol=1e-15, K=1000):
+    v = np.random.rand(A.shape[1])
+    vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
+    e = productoEscalar(vPrima, v)
+    k = 0
+    while np.abs(e-1) > tol and k < K:
+        v = vPrima
+        vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
+        e = productoEscalar(vPrima, v)
+        k+=1
+    autovalor = productoEscalar(vPrima, calcularAx(A, vPrima))
+    error = e-1
+    return [vPrima, autovalor, error]
+
+
+def restarVectores (a, b):
+    #TO DO IMPLEMENTAR
+    return a - b
+
+
+def diagRH(A, tol=1e-15, K=1000):
+    autovector, lamda, _ =  metpot2k(A, tol, K)
+
+    n = A.shape[0]
+    u = restarVectores(np.eye(n)[0], autovector)
+    uNormaAl2 = norma(u, 2)**2
+    
+    aRestar = (2 / uNormaAl2 ) * multiplacionMatricialDeVectores(u, u)
+    #aRestar = escalarXMatriz ( 2/uNormaAl2, multiplacionMatricialDeVectores(u, u))
+
+    reflectorHouseholder = np.eye(n) - aRestar   #  TO DO  restar(np.eye(n), aRestar)
+    if n == 2:
+        S = reflectorHouseholder
+        D = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder) ) )
+    else:
+        B = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder) ) )
+        APrima = B[1:n, 1:n]
+        SPrima, DPrima = diagRH(APrima,tol,K)
+        D = np.eye(A.shape[0]) * lamda 
+        D[1:n, 1:n] = DPrima
+        S = np.eye(A.shape[0])
+        S[1:n, 1:n] = SPrima
+        S = multiplicar(reflectorHouseholder, S)
+
+    return S, D
+
 # Tests para los labos
 
 # funciones extras para los tests
@@ -587,7 +671,8 @@ def correrTestsLabos():
     #test_labo2()
     #test_labo3()
     #test_labo4()
-    test_labo5()
+    #test_labo5()
+    test_labo6()
 
 def test_labo1():
     assert(not sonIguales(1,1.1))
@@ -889,5 +974,74 @@ def test_labo5():
 
     Q4c, R4c = calculaQR(A4, metodo='RH')
     check_QR(Q4c, R4c, A4)
+
+
+def test_labo6():
+        #### TESTEOS
+    # Tests metpot2k
+
+    S = np.vstack([
+        np.array([2,1,0])/np.sqrt(5),
+        np.array([-1,2,5])/np.sqrt(30),
+        np.array([1,-2,1])/np.sqrt(6)
+                ]).T
+
+    # Pedimos que pase el 95% de los casos
+    exitos = 0
+    for i in range(100):
+        D = np.diag(np.random.random(3)+1)*100
+        A = S@D@S.T
+        v,l,_ = metpot2k(A,1e-15,1e5)
+        if np.abs(l - np.max(D))< 1e-8:
+            exitos += 1
+    assert exitos > 95
+
+
+    #Test con HH
+    exitos = 0
+    for i in range(100):
+        v = np.random.rand(9)
+        #v = np.abs(v)
+        #v = (-1) * v
+        ixv = np.argsort(-np.abs(v))
+        D = np.diag(v[ixv])
+        I = np.eye(9)
+        H = I - 2*np.outer(v.T, v)/(np.linalg.norm(v)**2)   #matriz de HouseHolder
+
+        A = H@D@H.T
+        v,l,_ = metpot2k(A, 1e-15, 1e5)
+        #max_eigen = abs(D[0][0])
+        if abs(l - D[0,0]) < 1e-8:         
+            exitos +=1
+    assert exitos > 95
+
+
+
+    # Tests diagRH
+    D = np.diag([1,0.5,0.25])
+    S = np.vstack([
+        np.array([1,-1,1])/np.sqrt(3),
+        np.array([1,1,0])/np.sqrt(2),
+        np.array([1,-1,-2])/np.sqrt(6)
+                ]).T
+
+    A = S@D@S.T
+    SRH,DRH = diagRH(A,tol=1e-15,K=1e5)
+    assert np.allclose(D,DRH)
+    assert np.allclose(np.abs(S.T@SRH),np.eye(A.shape[0]),atol=1e-7)
+
+
+
+    # Pedimos que pase el 95% de los casos
+    exitos = 0
+    for i in range(100):
+        A = np.random.random((5,5))
+        A = 0.5*(A+A.T)
+        S,D = diagRH(A,tol=1e-15,K=1e5)
+        ARH = S@D@S.T
+        e = normaExacta(ARH-A,p='inf')
+        if e < 1e-5: 
+            exitos += 1
+    assert exitos >= 95
 
 correrTestsLabos()
