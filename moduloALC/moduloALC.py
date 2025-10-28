@@ -12,7 +12,7 @@ def esCuadrada(a):
     return a.ndim == 2 and a.shape[0] == a.shape[1]
 
 def matrizDeCeros(filas, columnas):
-    return [[0.0 for _ in range(columnas)] for _ in range(filas)]
+    return np.array([[0.0 for _ in range(columnas)] for _ in range(filas)])
 
 def triangSup(a):
     if not esCuadrada(a):
@@ -580,16 +580,14 @@ def calculaQR(A, metodo='RH',tol=1e-12):
         return None
 
 
-def escalarXMatriz(e, m):
-    res = m
-    filas, columnas = res.shape
-    for i in range(filas):
-        for j in range(columnas):
-            res[i][j] = e*res
+def matrizPorEscalar(A, c):
+    res = np.zeros(A.shape)
+
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            res[i][j] = A[i][j] * c
 
     return res
-
-
 
 def aplicarMatrizYNormalizar(A, v):
     w = calcularAx(A, v)
@@ -605,9 +603,6 @@ def aplicarMatrizKVecesYNormalizar(A, v, k):
     for i in range(k):
         w = aplicarMatrizYNormalizar(A, w)
     return w
-
-
-
 
 def metpot2k(A, tol=1e-15, K=1000):
     v = np.random.rand(A.shape[1])
@@ -625,9 +620,15 @@ def metpot2k(A, tol=1e-15, K=1000):
 
 
 def restarVectores (a, b):
-    #TO DO IMPLEMENTAR
-    return a - b
+    if a.shape != b.shape:
+        return None
 
+    res = np.zeros(a.shape)
+
+    for i in range(a.shape[0]):
+        res[i] = a[i] - b[i]
+
+    return res
 
 def diagRH(A, tol=1e-15, K=1000):
     autovector, lamda, _ =  metpot2k(A, tol, K)
@@ -636,10 +637,9 @@ def diagRH(A, tol=1e-15, K=1000):
     u = restarVectores(np.eye(n)[0], autovector)
     uNormaAl2 = norma(u, 2)**2
     
-    aRestar = (2 / uNormaAl2 ) * multiplacionMatricialDeVectores(u, u)
-    #aRestar = escalarXMatriz ( 2/uNormaAl2, multiplacionMatricialDeVectores(u, u))
+    aRestar = matrizPorEscalar(multiplacionMatricialDeVectores(u, u), (2/uNormaAl2))
+    reflectorHouseholder = restar(np.eye(n), aRestar)
 
-    reflectorHouseholder = np.eye(n) - aRestar   #  TO DO  restar(np.eye(n), aRestar)
     if n == 2:
         S = reflectorHouseholder
         D = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder) ) )
@@ -647,7 +647,7 @@ def diagRH(A, tol=1e-15, K=1000):
         B = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder) ) )
         APrima = B[1:n, 1:n]
         SPrima, DPrima = diagRH(APrima,tol,K)
-        D = np.eye(A.shape[0]) * lamda 
+        D = matrizPorEscalar(np.eye(A.shape[0]), lamda)
         D[1:n, 1:n] = DPrima
         S = np.eye(A.shape[0])
         S[1:n, 1:n] = SPrima
