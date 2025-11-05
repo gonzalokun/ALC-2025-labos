@@ -73,23 +73,48 @@ def traza(a):
     return result
 
 def traspuesta(a):
-    filas, columnas = a.shape
-    result = matrizDeCeros(filas, columnas)
-    result = np.array(result)
-    for fila in range(filas):
-        for columna in range(columnas):
-            result[columna][fila] = a [fila][columna]
-    return result
+
+    if a.shape[0] == 0:
+        return a
+
+    # Transponer vector
+    if len(a.shape) == 1:
+        filas, = a.shape
+        result = matrizDeCeros(1, filas)
+        result = np.array(result)
+        for fila in range(filas):
+            result[0][fila] = a[fila]
+        return result
+
+    # Transponer matriz
+    else:
+        filas, columnas = a.shape
+        result = matrizDeCeros(columnas, filas)
+        result = np.array(result)
+        for fila in range(filas):
+            for columna in range(columnas):
+                result[columna][fila] = a[fila][columna]
+        return result
+
+def vectorAMatriz(a):
+    return traspuesta(traspuesta(a))
 
 def esSimetrica(a):
+
     if not esCuadrada(a) :
         return False
 
     filas, columnas = a.shape
-    res = matrizDeCeros(filas, columnas)
     tras = traspuesta(a)
 
-    return restar(a, tras) == res
+    dif = restar(a, tras)
+
+    for i in range(filas):
+        for j in range(columnas):
+            if np.abs(dif[i][j]) > 1e-15:
+                return False
+
+    return True
 
 def restar(a, b):
     # ponele que checkeamos que sean == las dim
@@ -615,7 +640,7 @@ def metpot2k(A, tol=1e-15, K=1000):
         v = vPrima
         vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
         e = productoEscalar(vPrima, v)
-        k+=1
+        k += 1
     autovalor = productoEscalar(vPrima, calcularAx(A, vPrima))
     error = e-1
     return [vPrima, autovalor, error]
@@ -632,6 +657,10 @@ def restarVectores (a, b):
     return res
 
 def diagRH(A, tol=1e-15, K=1000):
+
+    if not esSimetrica(A):
+        return None
+
     autovector, lamda, _ =  metpot2k(A, tol, K)
 
     n = A.shape[0]
@@ -644,10 +673,11 @@ def diagRH(A, tol=1e-15, K=1000):
     if n == 2:
         S = reflectorHouseholder
         D = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder)))
+
     else:
         B = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder)))
         APrima = B[1:n, 1:n]
-        SPrima, DPrima = diagRH(APrima,tol,K)
+        SPrima, DPrima = diagRH(APrima, tol, K)
         D = matrizPorEscalar(np.eye(A.shape[0]), lamda)
         D[1:n, 1:n] = DPrima
         S = np.eye(A.shape[0])
@@ -710,16 +740,25 @@ def nucleo(A, tol=1e-15):
     Retorna los autovectores en cuestion, como una matriz de n x k, con k el numero de autovectores en el nucleo.
     """
     A_t = traspuesta(A)
-    M = restar(multiplicar(A_t, A), np.eye(A.shape[0]))
+    M = multiplicar(A_t, A)
     S, D = diagRH(M, tol)
 
-    res = np.array([])
+    autovectores_nucleo = []
 
     for i in range(D.shape[0]):
-        if np.abs(D[i,i]) <= tol:
-            np.append(res,S[:,i])
+        if np.abs(D[i, i]) <= tol:
+            autovectores_nucleo.append(S[:, i])
 
-    return res
+    if len(autovectores_nucleo) == 0:
+        return np.array([])
+
+    res = matrizDeCeros(A.shape[1], len(autovectores_nucleo))
+
+    for i in range(len(autovectores_nucleo)):
+        for j in range(res.shape[0]):
+            res[j][i] = autovectores_nucleo[i][j]
+
+    return vectorAMatriz(res)
 
 def crea_rala(listado,m_filas,n_columnas,tol=1e-15):
     """
@@ -783,7 +822,7 @@ def es_markov_uniforme(T,thres=1e-6):
             return False
     return True
 
-def esNucleo(A,S,tol=1e-5):
+def esNucleo(A, S, tol=1e-5):
     """
     A una matriz m x n
     S una matriz n x k
@@ -1108,9 +1147,8 @@ def test_labo5():
 
 
 def test_labo6():
-        #### TESTEOS
+    #### TESTEOS
     # Tests metpot2k
-
     S = np.vstack([
         np.array([2,1,0])/np.sqrt(5),
         np.array([-1,2,5])/np.sqrt(30),
@@ -1126,7 +1164,6 @@ def test_labo6():
         if np.abs(l - np.max(D))< 1e-8:
             exitos += 1
     assert exitos > 95
-
 
     #Test con HH
     exitos = 0
@@ -1146,8 +1183,6 @@ def test_labo6():
             exitos +=1
     assert exitos > 95
 
-
-
     # Tests diagRH
     D = np.diag([1,0.5,0.25])
     S = np.vstack([
@@ -1161,8 +1196,6 @@ def test_labo6():
     assert np.allclose(D,DRH)
     assert np.allclose(np.abs(S.T@SRH),np.eye(A.shape[0]),atol=1e-7)
 
-
-
     # Pedimos que pase el 95% de los casos
     exitos = 0
     for i in range(100):
@@ -1170,7 +1203,7 @@ def test_labo6():
         A = 0.5*(A+A.T)
         S,D = diagRH(A,tol=1e-15,K=1e5)
         ARH = S@D@S.T
-        e = normaExacta(ARH-A,p='inf')
+        e = normaExacta(ARH-A, p='inf')
         if e < 1e-5: 
             exitos += 1
     assert exitos >= 95
