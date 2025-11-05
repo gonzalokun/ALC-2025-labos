@@ -3,6 +3,7 @@ from fcntl import FASYNC
 import numpy as np
 import math
 
+from puddlestuff.audioinfo.id3 import v1_option
 from soupsieve.util import lower
 
 
@@ -699,8 +700,8 @@ def transiciones_al_azar_continuas(n):
         suma = 0
 
         for i in range(n):
-            res[i,j] = np.random.rand()
-            suma += res[i,j]
+            res[i, j] = np.random.rand()
+            suma += res[i, j]
 
         if suma != 0:
             for i in range(n):
@@ -717,18 +718,18 @@ def transiciones_al_azar_uniformes(n, thres):
     Todos los elementos de la columna $j$ son iguales
     (a 1 sobre el número de elementos distintos de cero en la columna).
     """
-    res = matrizDeCeros(n,n)
+    res = matrizDeCeros(n, n)
 
     for j in range(n):
         suma = 0
 
         for i in range(n):
-            res[i,j] = 1 if np.random.rand() <= thres else 0
-            suma += res[i,j]
+            res[i, j] = 1 if np.random.rand() <= thres else 0
+            suma += res[i, j]
 
         if suma != 0:
             for i in range(n):
-                res[i,j] = res[i,j] / suma
+                res[i, j] = res[i, j] / suma
 
     return res
 
@@ -760,21 +761,38 @@ def nucleo(A, tol=1e-15):
 
     return vectorAMatriz(res)
 
-def crea_rala(listado,m_filas,n_columnas,tol=1e-15):
+def crea_rala(listado, m_filas, n_columnas, tol=1e-15):
     """
     Recibe una lista listado, con tres elementos: lista con indices i, lista con indices j, y lista con valores A_ij de la matriz A. Tambien las dimensiones de la matriz a traves de m_filas y n_columnas. Los elementos menores a tol se descartan.
     Idealmente, el listado debe incluir unicamente posiciones correspondientes a valores distintos de cero. Retorna una lista con:
     - Diccionario {(i,j):A_ij} que representa los elementos no nulos de la matriz A. Los elementos con modulo menor a tol deben descartarse por default.
     - Tupla (m_filas,n_columnas) que permita conocer las dimensiones de la matriz.
     """
-    raise NotImplementedError("Implementar crea_rala")
+    elems = {}
 
-def multiplica_rala_vector(A,v):
+    if not len(listado) == 0:
+        coord_i, coord_j, valores = listado
+
+        for k in range(len(coord_i)):
+            if np.abs(valores[k]) > tol:
+                elems[(coord_i[k], coord_j[k])] = valores[k]
+
+    return elems, (m_filas, n_columnas)
+
+def multiplica_rala_vector(A, v):
     """
     Recibe una matriz rala creada con crea_rala y un vector v.
     Retorna un vector w resultado de multiplicar A con v
     """
-    raise NotImplementedError("Implementar multiplica_rala_vector")
+
+    res = np.zeros(v.shape[0])
+
+    for key, value in A[0].items():
+        i = key[0]
+        j = key[1]
+        res[i] += value * v[j]
+
+    return res
 
 # Tests para los labos
 
