@@ -47,18 +47,15 @@ def triangInf(a):
 
 def diagonal(a):
     a = np.array(a)
-    if not esCuadrada(a):
-        return False
 
-    filas, columnas = a.shape
-    result = matrizDeCeros(filas, columnas)
-    result = np.array(result)
+    filas = len(a)
+    result = matrizDeCeros(filas, filas)
     for fila in range(filas):
-        for columna in range(columnas):
+        for columna in range(filas):
             if fila != columna:
                 result[fila][columna] = 0
             else:
-                result[fila][columna] = a[fila][columna]
+                result[fila][columna] = a[fila]
     return result
 
 def traza(a):
@@ -102,7 +99,7 @@ def vectorAMatriz(a):
 
 def esSimetrica(a):
 
-    if not esCuadrada(a) :
+    if not esCuadrada(a):
         return False
 
     filas, columnas = a.shape
@@ -112,7 +109,7 @@ def esSimetrica(a):
 
     for i in range(filas):
         for j in range(columnas):
-            if np.abs(dif[i][j]) > 1e-15:
+            if np.abs(dif[i][j]) >= 1e-10:
                 return False
 
     return True
@@ -637,12 +634,17 @@ def metpot2k(A, tol=1e-15, K=1000):
     vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
     e = productoEscalar(vPrima, v)
     k = 0
-    while np.abs(e-1) > tol and k < K:
+    while np.abs(e-1) >= tol and k < K:
         v = vPrima
         vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
         e = productoEscalar(vPrima, v)
         k += 1
+
     autovalor = productoEscalar(vPrima, calcularAx(A, vPrima))
+
+    if autovalor < tol:
+        autovalor = 0.0
+
     error = e-1
     return [vPrima, autovalor, error]
 
@@ -794,6 +796,46 @@ def multiplica_rala_vector(A, v):
 
     return res
 
+# Labo 8
+
+def svd_reducida(A, k="max", tol=1e-15):
+    A_t = traspuesta(A)
+    M = multiplicar(A_t, A)
+    S, D = diagRH(M, tol)
+
+    autovectores = []
+    autovalores = []
+
+    if k == "max":
+        k = D.shape[0]
+
+    i = 0
+    while i < k and np.abs(D[i, i]) >= tol:
+
+        if np.abs(D[i, i]) >= tol and not (D[i, i] < 0):
+            autovectores.append(S[:, i])
+            autovalores.append(np.sqrt(D[i, i]))
+
+        i += 1
+
+    res = matrizDeCeros(A.shape[1], len(autovectores))
+
+    for i in range(len(autovectores)):
+        for j in range(res.shape[0]):
+            res[j][i] = autovectores[i][j]
+
+    V_s = vectorAMatriz(res)
+    E_s = autovalores
+
+    B = multiplicar(A, V_s)
+
+    for j in range(B.shape[1]):
+        B[:, j] = vectorPorEscalar(B[:, j], 1/norma(B[:, j], 2))
+
+    U_s = B
+
+    return U_s, E_s, V_s
+
 # Tests para los labos
 
 # funciones extras para los tests
@@ -860,7 +902,8 @@ def correrTestsLabos():
     #test_labo4()
     #test_labo5()
     #test_labo6()
-    test_labo7()
+    #test_labo7()
+    test_labo8()
 
 def test_labo1():
     assert(not sonIguales(1,1.1))
@@ -1300,5 +1343,54 @@ def test_labo7():
     A_rala = crea_rala(listado, 5, 5)
     v = np.random.random(5)
     assert np.allclose(multiplica_rala_vector(A_rala, v), A @ v)
+
+
+def genera_matriz_para_test(m, n=2, tam_nucleo=0):
+    if tam_nucleo == 0:
+        A = np.random.random((m, n))
+    else:
+        A = np.random.random((m, tam_nucleo))
+        A = np.hstack([A, A])
+    return (A)
+
+# Cambiamos tol acá
+def test_svd_reducida_mn(A, tol=1e-14):
+    m, n = A.shape
+    hU, hS, hV = svd_reducida(A, tol=tol)
+    nU, nS, nVT = np.linalg.svd(A)
+    r = len(hS) + 1
+    assert np.all(np.abs(np.abs(np.diag(hU.T @ nU)) - 1) < 10 ** r * tol), 'Revisar calculo de hat U en ' + str(
+        (m, n))
+    assert np.all(np.abs(np.abs(np.diag(nVT @ hV)) - 1) < 10 ** r * tol), 'Revisar calculo de hat V en ' + str(
+        (m, n))
+    assert len(hS) == len(nS[np.abs(nS) > tol]), 'Hay cantidades distintas de valores singulares en ' + str((m, n))
+    assert np.all(
+        np.abs(hS - nS[np.abs(nS) > tol]) < 10 ** r * tol), 'Hay diferencias en los valores singulares en ' + str(
+        (m, n))
+
+def test_labo8():
+    # Matrices al azar
+    for m in [2, 5, 10, 20]:
+        for n in [2, 5, 10, 20]:
+            for _ in range(10):
+                A = genera_matriz_para_test(m, n)
+                test_svd_reducida_mn(A)
+
+    # Matrices con nucleo
+    m = 12
+    for tam_nucleo in [2, 4, 6]:
+        for _ in range(10):
+            A = genera_matriz_para_test(m, tam_nucleo=tam_nucleo)
+            test_svd_reducida_mn(A)
+
+    # Tamaños de las reducidas
+    A = np.random.random((8, 6))
+    for k in [1, 3, 5]:
+        hU, hS, hV = svd_reducida(A, k=k)
+        assert hU.shape[0] == A.shape[0], 'Dimensiones de hU incorrectas (caso a)'
+        assert hV.shape[0] == A.shape[1], 'Dimensiones de hV incorrectas(caso a)'
+        assert hU.shape[1] == k, 'Dimensiones de hU incorrectas (caso a)'
+        assert hV.shape[1] == k, 'Dimensiones de hV incorrectas(caso a)'
+        assert len(hS) == k, 'Tamaño de hS incorrecto'
 
 correrTestsLabos()
