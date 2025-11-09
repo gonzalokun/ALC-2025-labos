@@ -617,7 +617,7 @@ def matrizPorEscalar(A, c):
 def aplicarMatrizYNormalizar(A, v):
     w = calcularAx(A, v)
     wNorma = norma(w, 2)
-    if wNorma == 0:
+    if wNorma <= 1e-15:
         return np.zeros(w.shape[0])
     else:
         w = vectorPorEscalar(w, 1/wNorma)
@@ -632,9 +632,10 @@ def aplicarMatrizKVecesYNormalizar(A, v, k):
 def metpot2k(A, tol=1e-15, K=1000):
     v = np.random.rand(A.shape[1])
     vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
+
     e = productoEscalar(vPrima, v)
     k = 0
-    while np.abs(e-1) >= tol and k < K:
+    while np.abs(e-1) > tol and k < K:
         v = vPrima
         vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
         e = productoEscalar(vPrima, v)
@@ -642,8 +643,8 @@ def metpot2k(A, tol=1e-15, K=1000):
 
     autovalor = productoEscalar(vPrima, calcularAx(A, vPrima))
 
-    if autovalor < tol:
-        autovalor = 0.0
+    # if autovalor < tol:
+    #     autovalor = 0.0
 
     error = e-1
     return [vPrima, autovalor, error]
@@ -896,14 +897,14 @@ def esNucleo(A, S, tol=1e-5):
     return True
 
 def correrTestsLabos():
-    #test_labo1()
+    test_labo1()
     #test_labo2()
     #test_labo3()
     #test_labo4()
     #test_labo5()
     #test_labo6()
     #test_labo7()
-    test_labo8()
+    #test_labo8()
 
 def test_labo1():
     assert(not sonIguales(1,1.1))
@@ -1262,10 +1263,10 @@ def test_labo6():
     for i in range(100):
         A = np.random.random((5,5))
         A = 0.5*(A+A.T)
-        S,D = diagRH(A,tol=1e-15,K=1e5)
+        S,D = diagRH(A,tol=1e-15,K=10000)
         ARH = S@D@S.T
         e = normaExacta(ARH-A, p='inf')
-        if e < 1e-5: 
+        if e < 1e-5:
             exitos += 1
     assert exitos >= 95
 
