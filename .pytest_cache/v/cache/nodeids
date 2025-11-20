@@ -1,0 +1,11 @@
+[
+  "moduloALC/moduloALC.py::test_labo1",
+  "moduloALC/moduloALC.py::test_labo2",
+  "moduloALC/moduloALC.py::test_labo3",
+  "moduloALC/moduloALC.py::test_labo4",
+  "moduloALC/moduloALC.py::test_labo5",
+  "moduloALC/moduloALC.py::test_labo6",
+  "moduloALC/moduloALC.py::test_labo7",
+  "moduloALC/moduloALC.py::test_labo8",
+  "moduloALC/moduloALC.py::test_svd_reducida_mn"
+]

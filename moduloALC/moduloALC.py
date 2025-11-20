@@ -1,16 +1,10 @@
-from fcntl import FASYNC
-
 import numpy as np
-import math
-
-from puddlestuff.audioinfo.id3 import v1_option
-from soupsieve.util import lower
-
 
 # labo 0
 
 def esCuadrada(a):
     return a.ndim == 2 and a.shape[0] == a.shape[1]
+
 
 def matrizDeCeros(filas, columnas):
     return np.array([[0.0 for _ in range(columnas)] for _ in range(filas)])
@@ -26,9 +20,10 @@ def triangSup(a):
         for columna in range(columnas):
             if fila >= columna:
                 result[fila][columna] = 0
-            else :
+            else:
                 result[fila][columna] = a[fila][columna]
     return result
+
 
 def triangInf(a):
     if not esCuadrada(a):
@@ -45,10 +40,9 @@ def triangInf(a):
                 result[fila][columna] = a[fila][columna]
     return result
 
-def diagonal(a):
-    a = np.array(a)
 
-    filas = len(a)
+def diagonal(a):
+    filas = a.shape[0]
     result = matrizDeCeros(filas, filas)
     for fila in range(filas):
         for columna in range(filas):
@@ -57,6 +51,7 @@ def diagonal(a):
             else:
                 result[fila][columna] = a[fila]
     return result
+
 
 def traza(a):
     if not esCuadrada(a):
@@ -70,8 +65,8 @@ def traza(a):
                 result = result + a[fila][columna]
     return result
 
-def traspuesta(a):
 
+def traspuesta(a):
     if a.shape[0] == 0:
         return a
 
@@ -94,11 +89,12 @@ def traspuesta(a):
                 result[columna][fila] = a[fila][columna]
         return result
 
+
 def vectorAMatriz(a):
     return traspuesta(traspuesta(a))
 
-def esSimetrica(a):
 
+def esSimetrica(a, tol=1e-10):
     if not esCuadrada(a):
         return False
 
@@ -109,10 +105,11 @@ def esSimetrica(a):
 
     for i in range(filas):
         for j in range(columnas):
-            if np.abs(dif[i][j]) >= 1e-10:
+            if np.abs(dif[i][j]) >= tol:
                 return False
 
     return True
+
 
 def restar(a, b):
     # ponele que checkeamos que sean == las dim
@@ -127,6 +124,7 @@ def restar(a, b):
 
     return res
 
+
 def calcularAx(matriz, vector_x):
     tamVector = len(vector_x)
     if matriz.shape[1] != tamVector:
@@ -140,15 +138,18 @@ def calcularAx(matriz, vector_x):
 
     return np.array(result)
 
+
 def intercambiarFila(matriz, fila1, fila2):
     for j in range(matriz.shape[1]):
         tmp = matriz[fila1][j]
         matriz[fila1][j] = matriz[fila2][j]
         matriz[fila2][j] = tmp
 
+
 def sumarFilaMultiplo(matriz, fila1, fila2, num):
     for j in range(matriz.shape[1]):
-        matriz[fila1][j] += num*matriz[fila2][j]
+        matriz[fila1][j] += num * matriz[fila2][j]
+
 
 def esDiagonalmenteDominante(matriz):
     if not esCuadrada(matriz):
@@ -166,31 +167,32 @@ def esDiagonalmenteDominante(matriz):
 
     return True
 
-def circulante(vector):
 
+def circulante(vector):
     result = matrizDeCeros(vector.shape[0], vector.shape[0])
 
     for i in range(vector.shape[0]):
         for j in range(vector.shape[0]):
-            result[i][j] = vector[(j-i)%vector.shape[0]]
+            result[i][j] = vector[(j - i) % vector.shape[0]]
 
     return result
+
 
 def matrizVandermonde(vector):
-
     result = matrizDeCeros(vector.shape[0], vector.shape[0])
 
     for i in range(vector.shape[0]):
         for j in range(vector.shape[0]):
-            result[i][j] = vector[j]**i
+            result[i][j] = vector[j] ** i
 
     return result
+
 
 def numeroAureo(n):
     a = 0
     b = 1
 
-    for i in range(n+1):
+    for i in range(n + 1):
         tmp = a
         a = b
         b += tmp
@@ -198,28 +200,35 @@ def numeroAureo(n):
     if a == 0:
         return 0
 
-    return b/a
+    return b / a
+
 
 def multiplicar(matrizA, matrizB):
-    if matrizA.shape[1] != matrizB.shape[0]:
-        raise Exception("No se puede :(")
+    return matrizA @ matrizB
+    filasA, columnasA = matrizA.shape
+    filasB, columnasB = matrizB.shape
 
-    res = matrizDeCeros(matrizA.shape[0], matrizB.shape[1])
+    if columnasA != filasB:
+        raise Exception("No se puede multiplicar :(")
 
-    for i in range(matrizA.shape[0]):
-        for j in range(matrizB.shape[1]):
-            for k in range(matrizA.shape[1]):
-                res[i][j] += matrizA[i][k]*matrizB[k][j]
+    res = matrizDeCeros(filasA, columnasB)
 
-    return np.array(res)
+    for i in range(filasA):
+        for j in range(columnasB):
+            for k in range(columnasA):
+                res[i, j] += matrizA[i, k] * matrizB[k, j]
+
+    return res
+
 
 def multiplacionMatricialDeVectores(vectorA, vectorB):
     res = np.zeros((vectorA.shape[0], vectorB.shape[0]))
 
     for i in range(vectorA.shape[0]):
         for j in range(vectorB.shape[0]):
-            res[i][j] = vectorA[i]*vectorB[j]
+            res[i, j] = vectorA[i] * vectorB[j]
     return res
+
 
 def productoEscalar(vectorA, vectorB):
     if vectorA.shape[0] != vectorB.shape[0]:
@@ -227,24 +236,28 @@ def productoEscalar(vectorA, vectorB):
     else:
         res = 0.0
         for i in range(vectorA.shape[0]):
-            res += vectorA[i]*vectorB[i]
+            res += vectorA[i] * vectorB[i]
         return res
+
 
 def vectorPorEscalar(x, s):
     res = []
     for i in range(len(x)):
-        res.append(x[i]*s)
+        res.append(x[i] * s)
     return np.array(res)
+
 
 # labo 1
 
 def error(x, y):
     return abs(x - y)
 
+
 def error_relativo(x, y):
     return abs(x - y) / abs(x)
 
-def matricesIguales(A, B):
+
+def matricesIguales(A, B, tol=1e-8):
     """
     Devuelve True si ambas matrices son iguales y False en otro caso.
     Considerar que las matrices pueden tener distintas dimensiones, ademas de distintos valores.
@@ -254,10 +267,11 @@ def matricesIguales(A, B):
 
     for i in range(A.shape[0]):
         for j in range(A.shape[1]):
-            if abs(A[i][j] - B[i][j]) >= 1e-08:
+            if abs(A[i][j] - B[i][j]) >= tol:
                 return False
 
     return True
+
 
 # labo 2
 
@@ -266,11 +280,12 @@ def rota(theta):
     Recibe un angulo theta y retorna una matriz de 2x2
     que rota un vector dado en un angulo theta
     """
-    res =np.array([
-        [math.cos(theta), -math.sin(theta)],
-        [math.sin(theta),  math.cos(theta)]
+    res = np.array([
+        [np.cos(theta), -np.sin(theta)],
+        [np.sin(theta), np.cos(theta)]
     ])
     return res
+
 
 def escala(s):
     """
@@ -286,7 +301,8 @@ def escala(s):
 
     return np.array(res)
 
-def rota_y_escala(theta,s):
+
+def rota_y_escala(theta, s):
     """
     Recibe un angulo theta y una tira de numeros s,
     y retorna una matriz de 2x2 que rota el vector en un angulo theta
@@ -295,7 +311,8 @@ def rota_y_escala(theta,s):
     res = multiplicar(rota(theta), escala(s))
     return res
 
-def afin(theta,s,b):
+
+def afin(theta, s, b):
     """
     Recibe un angulo theta , una tira de numeros s (en R2) , y un vector
     b en R2.
@@ -303,7 +320,7 @@ def afin(theta,s,b):
     luego lo escala en un factor s y por ultimo lo mueve en un valor
     fijo b
     """
-    matriz2x2 = rota_y_escala(theta,s)
+    matriz2x2 = rota_y_escala(theta, s)
     matriz3x3 = np.array(matrizDeCeros(3, 3))
     matriz3x3[:2, :2] = matriz2x2
     matriz3x3[0][2] = b[0]
@@ -311,19 +328,21 @@ def afin(theta,s,b):
     matriz3x3[2][2] = 1
     return np.array(matriz3x3)
 
-def trans_afin(v,theta,s,b):
+
+def trans_afin(v, theta, s, b):
     """
     Recibe un vector v (en R2), un angulo theta,
     una tira de numeros s (en R2), y un vector b en R2.
     Retorna el vector w resultante de aplicar la transformacion afin a
     v
     """
-    transf = afin(theta,s,b)
-    vectorCon1 =  np.append(v, 1)
+    transf = afin(theta, s, b)
+    vectorCon1 = np.append(v, 1)
     vectorColumna = vectorCon1.T
     vectorColumnaRes = calcularAx(transf, vectorColumna)
     res = vectorColumnaRes.T[:2]
     return res
+
 
 # labo 3
 
@@ -339,9 +358,10 @@ def norma(x, p):
 
     sum = 0
     for i in range(len(x)):
-        sum += abs(x[i])**p
+        sum += abs(x[i]) ** p
 
-    return sum**(1/p)
+    return sum ** (1 / p)
+
 
 def normaliza(X, p):
     """
@@ -352,8 +372,9 @@ def normaliza(X, p):
     vectoresNormalizados = []
     for i in range(len(X)):
         vectorActual = X[i]
-        vectoresNormalizados.append(vectorPorEscalar(vectorActual, (1/norma(vectorActual, p))))
+        vectoresNormalizados.append(vectorPorEscalar(vectorActual, (1 / norma(vectorActual, p))))
     return vectoresNormalizados
+
 
 def normaMatMC(A, q, p, Np):
     """
@@ -375,12 +396,13 @@ def normaMatMC(A, q, p, Np):
     # return max(vectorConNorma, key=lambda p: p[0])
     return max
 
+
 def normaExacta(A, p=[1, 'inf']):
     """
     Devuelve una lista con las normas 1 e infinito de una matriz A
     usando las expresiones del enunciado 2.(c).
     """
-    if not p in [1,'inf']:
+    if not p in [1, 'inf']:
         return None
     if p == 1:
         vectorSumas = []
@@ -400,12 +422,14 @@ def normaExacta(A, p=[1, 'inf']):
             vectorSumas.append(sum)
         return np.max(vectorSumas)
 
+
 def condMC(A, p, cantVect):
     """
     Devuelve el numero de condicion de A usando la norma inducida p.
     """
     inversa = np.linalg.inv(A)
     return normaMatMC(A, p, p, cantVect)[0] * normaMatMC(inversa, p, p, cantVect)[0]
+
 
 def condExacta(A, p):
     """
@@ -415,9 +439,11 @@ def condExacta(A, p):
     inversa = np.linalg.inv(A)
     return normaExacta(A, p) * normaExacta(inversa, p)
 
+
 # labo 4
 
 def calculaLU(A):
+    print("Calculando LU para matriz de: ", A.shape)
     nops = 0
     upper = matrizDeCeros(A.shape[0], A.shape[1]) + A
     lower = escala([1 for _ in range(A.shape[0])])
@@ -425,49 +451,48 @@ def calculaLU(A):
     for fila in range(upper.shape[0]):
         numDiagonal = upper[fila][fila]
 
-        if np.abs(numDiagonal)  < 1e-08:
+        if np.abs(numDiagonal) < 1e-08:
             return [None, None, 0]
 
-        for fila2 in range(fila+1, upper.shape[0]):
+        for fila2 in range(fila + 1, upper.shape[0]):
             nops += 1
 
-            coef = upper[fila2][fila]/numDiagonal
+            coef = upper[fila2][fila] / numDiagonal
             lower[fila2][fila] = coef
 
             upper[fila2][fila] = 0.0
 
-            for columna in range(fila+1, upper.shape[1]):
-                upper[fila2][columna] = upper[fila2][columna] - coef*upper[fila][columna]
+            for columna in range(fila + 1, upper.shape[1]):
+                upper[fila2][columna] = upper[fila2][columna] - coef * upper[fila][columna]
                 nops += 2
 
     return [lower, upper, nops]
 
 
 def res_tri(L, b, inferior=True):
-
     n = L.shape[1]
-    x_vector =  np.zeros(n)
-    
+    x_vector = np.zeros(n)
+
     if inferior:
         for i in range(n):
             x_actual = b[i]
-            #idea si es triangular inferior la solucion es de la pinta (b1/L11 , (b2-L21.X1)/L22 , b3-L32.X2-L31.X1   cada x_n se le restan todos los anteriores x_n
+            # idea si es triangular inferior la solucion es de la pinta (b1/L11 , (b2-L21.X1)/L22 , b3-L32.X2-L31.X1   cada x_n se le restan todos los anteriores x_n
             for j in range(i):
-                x_actual -= L[i][j]*x_vector[j]
-            x_actual = x_actual/L[i][i]
+                x_actual -= L[i][j] * x_vector[j]
+            x_actual = x_actual / L[i][i]
             x_vector[i] = x_actual
     else:
-        for i in range(n-1,-1,-1):
+        for i in range(n - 1, -1, -1):
             x_actual = b[i]
-            for j in range(i+1,n):
-                x_actual -= L[i][j]*x_vector[j]
-            x_actual = x_actual/L[i][i]
+            for j in range(i + 1, n):
+                x_actual -= L[i][j] * x_vector[j]
+            x_actual = x_actual / L[i][i]
             x_vector[i] = x_actual
 
     return x_vector
 
-def inversa(A):
 
+def inversa(A):
     descomposicion = calculaLU(A)
     L = descomposicion[0]
     U = descomposicion[1]
@@ -483,6 +508,7 @@ def inversa(A):
         y = res_tri(L, vector_canonico)
         inversa[columna] = res_tri(U, y, False)
     return traspuesta(inversa)
+
 
 def calculaLDV(A):
     nops = 0
@@ -505,6 +531,7 @@ def calculaLDV(A):
 
     return [L, D, V, nops]
 
+
 def esSDP(A, atol=1e-08):
     if not esSimetrica(A):
         return False
@@ -522,6 +549,7 @@ def esSDP(A, atol=1e-08):
 
     return True
 
+
 # LABO-6
 
 def QR_con_GS(A, tol=1e-12, retorna_nops=False):
@@ -532,40 +560,80 @@ def QR_con_GS(A, tol=1e-12, retorna_nops=False):
     retorna matrices Q y R calculadas con Gram Schmidt (y como tercer argumento opcional, el numero de operaciones).
     Si la matriz A no es de n x n, debe retornar None
     """
-    nops = 0 # TODO: Ver si los nops estan bien calculados porque no hay tests sobre ellos
+    # TODO: Revisar el psudocodigo porque hace cualquiera
+    nops = 0  # TODO: Ver si los nops estan bien calculados porque no hay tests sobre ellos
     n = A.shape[0]
 
     if n != A.shape[1]:
         return None
 
-    Q = np.zeros(A.shape)
-    R = np.zeros(A.shape)
+    Q = matrizDeCeros(A.shape[0], A.shape[1])
+    R = matrizDeCeros(A.shape[0], A.shape[1])
 
     for j in range(0, n):
         Q[:, j] = A[:, j]
         for k in range(j):
             R[k, j] = np.dot(Q[:, k], Q[:, j])
-            nops += n * 2 - 1 # n mult y n-1 sumas
+            nops += n * 2 - 1  # n mult y n-1 sumas
             Q[:, j] = Q[:, j] - vectorPorEscalar(Q[:, k], R[k, j])
-            nops += n * 2 # n mult y n restas
+            nops += n * 2  # n mult y n restas
 
         R[j, j] = norma(Q[:, j], 2)
-        nops += n * 2 # n mult y n-1 sumas y una raiz
-        Q[:, j] = vectorPorEscalar(Q[:, j], 1/R[j, j])
-        nops += n # n mult
+        nops += n * 2  # n mult y n-1 sumas y una raiz
+        Q[:, j] = vectorPorEscalar(Q[:, j], 1 / R[j, j])
+        nops += n  # n mult
 
     if retorna_nops:
         return [Q, R, nops]
 
     return [Q, R]
 
-def QR_con_HH(A,tol=1e-12):
+def QR_con_GS_no_cuadrada(A, tol=1e-12, retorna_nops=False):
+    """
+    A una matriz de n x n
+    tol la tolerancia con la que se filtran elementos nulos en R
+    retorna_nops permite (opcionalmente) retornar el numero de operaciones realizado
+    retorna matrices Q y R calculadas con Gram Schmidt (y como tercer argumento opcional, el numero de operaciones).
+    Si la matriz A no es de n x n, debe retornar None
+    """
+    print("Calculando QR con GS no cuadrada")
+    nops = 0
+    n = A.shape[1]
+
+    Q = matrizDeCeros(A.shape[0], A.shape[1])
+    R = matrizDeCeros(A.shape[1], A.shape[1])
+
+    for j in range(0, n):
+        print(f"\rCalculando columna: {j}", end="")
+        Q[:, j] = A[:, j]
+        for k in range(j):
+            R[k, j] = productoEscalar(Q[:, k], Q[:, j])
+            nops += n * 2 - 1  # n mult y n-1 sumas
+            Q[:, j] = Q[:, j] - vectorPorEscalar(Q[:, k], R[k, j])
+            nops += n * 2  # n mult y n restas
+
+        R[j, j] = norma(Q[:, j], 2)
+
+        # if R[j, j] < 1e-15:
+        #     print(f"COLUMNA {j} = :(")
+
+        nops += n * 2  # n mult y n-1 sumas y una raiz
+        Q[:, j] = vectorPorEscalar(Q[:, j], 1 / R[j, j])
+        nops += n  # n mult
+
+    if retorna_nops:
+        return [Q, R, nops]
+
+    return [Q, R]
+
+def QR_con_HH(A, tol=1e-12):
     """
     A una matriz de m x n (m>=n)
     tol la tolerancia con la que se filtran elementos nulos en R
     retorna matrices Q y R calculadas con reflexiones de Householder
     Si la matriz A no cumple m>=n, debe retornar None
     """
+    print("Calculando QR con HH")
     m = A.shape[0]
     n = A.shape[1]
     if m < n:
@@ -575,21 +643,23 @@ def QR_con_HH(A,tol=1e-12):
     Q = np.eye(m)
 
     for k in range(n):
+        print(f"\r\tIteracion: {k}", end="")
         x = R[k:m, k]
-        alfa = (-1) * np.sign(x[0]) / norma(x, 2)
+        alfa = (-1) * np.sign(x[0]) * norma(x, 2)
         u = x - alfa * np.eye(m - k)[0]
         norma_u = norma(u, 2)
         if norma_u > tol:
             u = u / norma_u
-            Hk = np.eye(m-k) - 2 * multiplacionMatricialDeVectores(u, u)
+            Hk = np.eye(m - k) - 2 * multiplacionMatricialDeVectores(u, u)
             Hk_p = np.eye(m)
-            Hk_p[k:m, k:m] = Hk 
+            Hk_p[k:m, k:m] = Hk
             R = multiplicar(Hk_p, R)
             Q = multiplicar(Q, Hk_p)
 
     return [Q, R]
 
-def calculaQR(A, metodo='RH',tol=1e-12):
+
+def calculaQR(A, metodo='RH', tol=1e-12):
     """
     A una matriz de n x n
     tol la tolerancia con la que se filtran elementos nulos en R
@@ -598,12 +668,36 @@ def calculaQR(A, metodo='RH',tol=1e-12):
     Si el metodo no esta entre las opciones, retorna None
     """
     if metodo == 'GS':
+
+        if not esCuadrada(A):
+            filas, columnas = A.shape
+            maxDim = max(filas, columnas)
+            M = np.eye(maxDim, maxDim)
+            M[:filas, :columnas] = A
+            return QR_con_GS(M, tol)
+
         return QR_con_GS(A, tol)
+
     elif metodo == 'RH':
         return QR_con_HH(A, tol)
     else:
         return None
 
+def calculaQR_exp(A, metodo='RH', tol=1e-12):
+    """
+    A una matriz de n x n
+    tol la tolerancia con la que se filtran elementos nulos en R
+    metodo = ['RH','GS'] usa reflectores de Householder (RH) o Gram Schmidt (GS) para realizar la factorizacion
+    retorna matrices Q y R calculadas con Gram Schmidt (y como tercer argumento opcional, el numero de operaciones)
+    Si el metodo no esta entre las opciones, retorna None
+    """
+    if metodo == 'GS':
+        return QR_con_GS_no_cuadrada(A, tol)
+
+    elif metodo == 'RH':
+        return QR_con_HH(A, tol)
+    else:
+        return None
 
 def matrizPorEscalar(A, c):
     res = np.zeros(A.shape)
@@ -614,14 +708,16 @@ def matrizPorEscalar(A, c):
 
     return res
 
+
 def aplicarMatrizYNormalizar(A, v):
     w = calcularAx(A, v)
     wNorma = norma(w, 2)
     if wNorma <= 1e-15:
         return np.zeros(w.shape[0])
     else:
-        w = vectorPorEscalar(w, 1/wNorma)
+        w = vectorPorEscalar(w, 1 / wNorma)
     return w
+
 
 def aplicarMatrizKVecesYNormalizar(A, v, k):
     w = v
@@ -635,21 +731,29 @@ def metpot2k(A, tol=1e-15, K=1000):
 
     e = productoEscalar(vPrima, v)
     k = 0
-    while np.abs(e-1) > tol and k < K:
+    print("metpot2k     aplica matriz cantidad de veces: ", end="")
+    while np.abs(e - 1) > tol and k < K:
         v = vPrima
         vPrima = aplicarMatrizKVecesYNormalizar(A, v, 2)
+        print(f"\r    {k * 2 + 2}", end="")
+
         e = productoEscalar(vPrima, v)
+        print(f"\terror: {e}", end="")
         k += 1
+    print()
 
     autovalor = productoEscalar(vPrima, calcularAx(A, vPrima))
 
     # if autovalor < tol:
     #     autovalor = 0.0
 
-    error = e-1
+    error = e - 1
+    print(f"metpot2k     obtuvo autovalor: {autovalor}")
+
     return [vPrima, autovalor, error]
 
-def restarVectores (a, b):
+
+def restarVectores(a, b):
     if a.shape != b.shape:
         return None
 
@@ -660,33 +764,48 @@ def restarVectores (a, b):
 
     return res
 
-def diagRH(A, tol=1e-15, K=1000):
 
-    if not esSimetrica(A):
-        return None
-
-    autovector, lamda, _ =  metpot2k(A, tol, K)
+def diagRH(A, tol=1e-15, K=1000, simetrica=False, iteracionesFaltantes="max"):
+    if simetrica == False:
+        # comentar esto si
+        if not esSimetrica(A):
+            return None
+    else:
+        simetrica = True
 
     n = A.shape[0]
-    u = restarVectores(np.eye(n)[0], autovector)
-    uNormaAl2 = norma(u, 2)**2
-    
-    aRestar = matrizPorEscalar(multiplacionMatricialDeVectores(u, u), (2/uNormaAl2))
-    reflectorHouseholder = restar(np.eye(n), aRestar)
 
-    if n == 2:
-        S = reflectorHouseholder
-        D = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder)))
+    if iteracionesFaltantes != "max" and iteracionesFaltantes == 0:
+        S = np.eye(n)
+        D = A
 
     else:
-        B = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder)))
-        APrima = B[1:n, 1:n]
-        SPrima, DPrima = diagRH(APrima, tol, K)
-        D = matrizPorEscalar(np.eye(A.shape[0]), lamda)
-        D[1:n, 1:n] = DPrima
-        S = np.eye(A.shape[0])
-        S[1:n, 1:n] = SPrima
-        S = multiplicar(reflectorHouseholder, S)
+        iteracionesFaltantesImprimir = iteracionesFaltantes
+        if iteracionesFaltantesImprimir == "max":
+            iteracionesFaltantesImprimir = n
+            iteracionesFaltantes = n
+        print(f"metpot2k     es llamada desde diagRH, faltando {iteracionesFaltantesImprimir} recursiones de diagRH")
+        autovector, lamda, _ = metpot2k(A, tol, K)
+
+        u = restarVectores(np.eye(n)[0], autovector)
+        uNormaAl2 = norma(u, 2) ** 2
+
+        aRestar = matrizPorEscalar(multiplacionMatricialDeVectores(u, u), (2 / uNormaAl2))
+        reflectorHouseholder = restar(np.eye(n), aRestar)
+
+        if n == 2:
+            S = reflectorHouseholder
+            D = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder)))
+
+        else:
+            B = multiplicar(reflectorHouseholder, multiplicar(A, traspuesta(reflectorHouseholder)))
+            APrima = B[1:n, 1:n]
+            SPrima, DPrima = diagRH(APrima, tol, K, simetrica, iteracionesFaltantes - 1)
+            D = matrizPorEscalar(np.eye(A.shape[0]), lamda)
+            D[1:n, 1:n] = DPrima
+            S = np.eye(A.shape[0])
+            S[1:n, 1:n] = SPrima
+            S = multiplicar(reflectorHouseholder, S)
 
     return S, D
 
@@ -697,7 +816,7 @@ def transiciones_al_azar_continuas(n):
     n la cantidad de filas (columnas) de la matriz de transición.
     Retorna matriz T de n x n normalizada por columnas, y con entradas al azar en el intervalo [0,1]
     """
-    res = matrizDeCeros(n,n)
+    res = matrizDeCeros(n, n)
 
     for j in range(n):
         suma = 0
@@ -708,9 +827,10 @@ def transiciones_al_azar_continuas(n):
 
         if suma != 0:
             for i in range(n):
-                res[i,j] = res[i,j] / suma
+                res[i, j] = res[i, j] / suma
 
     return res
+
 
 def transiciones_al_azar_uniformes(n, thres):
     """
@@ -735,6 +855,7 @@ def transiciones_al_azar_uniformes(n, thres):
                 res[i, j] = res[i, j] / suma
 
     return res
+
 
 def nucleo(A, tol=1e-15):
     """
@@ -764,6 +885,7 @@ def nucleo(A, tol=1e-15):
 
     return vectorAMatriz(res)
 
+
 def crea_rala(listado, m_filas, n_columnas, tol=1e-15):
     """
     Recibe una lista listado, con tres elementos: lista con indices i, lista con indices j, y lista con valores A_ij de la matriz A. Tambien las dimensiones de la matriz a traves de m_filas y n_columnas. Los elementos menores a tol se descartan.
@@ -782,6 +904,7 @@ def crea_rala(listado, m_filas, n_columnas, tol=1e-15):
 
     return elems, (m_filas, n_columnas)
 
+
 def multiplica_rala_vector(A, v):
     """
     Recibe una matriz rala creada con crea_rala y un vector v.
@@ -797,12 +920,17 @@ def multiplica_rala_vector(A, v):
 
     return res
 
+
 # Labo 8
 
-def svd_reducida(A, k="max", tol=1e-15):
+def svd_reducida(A, tol=1e-15, k="max"):
+    print("traspuesta   es llamada desde svd_reducida")
     A_t = traspuesta(A)
+    print("multiplicar  es llamada desde svd_reducida")
     M = multiplicar(A_t, A)
-    S, D = diagRH(M, tol)
+
+    print("diagRH       es llamada desde svd_reducida")
+    S, D = diagRH(M, tol, K=1000, simetrica=True, iteracionesFaltantes=k)
 
     autovectores = []
     autovalores = []
@@ -826,17 +954,16 @@ def svd_reducida(A, k="max", tol=1e-15):
             res[j][i] = autovectores[i][j]
 
     V_s = vectorAMatriz(res)
-    E_s = autovalores
+    E_s = np.array(autovalores)
 
     B = multiplicar(A, V_s)
 
     for j in range(B.shape[1]):
-        B[:, j] = vectorPorEscalar(B[:, j], 1/norma(B[:, j], 2))
+        B[:, j] = vectorPorEscalar(B[:, j], 1 / norma(B[:, j], 2))
 
     U_s = B
 
     return U_s, E_s, V_s
-
 # Tests para los labos
 
 # funciones extras para los tests
@@ -898,13 +1025,21 @@ def esNucleo(A, S, tol=1e-5):
 
 def correrTestsLabos():
     test_labo1()
-    #test_labo2()
-    #test_labo3()
-    #test_labo4()
-    #test_labo5()
-    #test_labo6()
-    #test_labo7()
-    #test_labo8()
+    print("Pasaron los test del labo 1")
+    test_labo2()
+    print("Pasaron los test del labo 2")
+    test_labo3()
+    print("Pasaron los test del labo 3")
+    test_labo4()
+    print("Pasaron los test del labo 4")
+    test_labo5()
+    print("Pasaron los test del labo 5")
+    test_labo6()
+    print("Pasaron los test del labo 6")
+    test_labo7()
+    print("Pasaron los test del labo 7")
+    test_labo8()
+    print("Pasaron los test del labo 8")
 
 def test_labo1():
     assert(not sonIguales(1,1.1))

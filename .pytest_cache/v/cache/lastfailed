@@ -1,0 +1,6 @@
+{
+  "moduloALC/moduloALC.py::test_svd_reducida_mn": true,
+  "moduloALC/moduloALC.py::test_labo6": true,
+  "moduloALC/moduloALC.py::test_labo7": true,
+  "moduloALC/moduloALC.py::test_labo8": true
+}
